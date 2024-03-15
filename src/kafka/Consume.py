@@ -26,6 +26,7 @@ try:
                 break
 
         print(msg.value().decode('utf-8'))
+        
 
 except KeyboardInterrupt:
     pass

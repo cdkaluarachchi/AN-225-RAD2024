@@ -22,7 +22,7 @@ try:
     while True:
         producer.produce(topic, value=json.dumps(parsed).encode('utf-8'))
         producer.flush() 
-        time.sleep(600)
+        time.sleep(300)
 
 except KeyboardInterrupt:
     pass
