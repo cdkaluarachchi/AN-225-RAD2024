@@ -5,7 +5,7 @@ import json
 
 API_KEY = "5e68e78603755969e4dbb47f458154bf"
 
-url = f"https://api.openweathermap.org/data/2.5/weather?lat=44.34&lon=10.99&appid={API_KEY}"
+url = f"https://api.openweathermap.org/data/2.5/weather?lat=6.9271&lon=79.8612&appid={API_KEY}"
 
 data = requests.get(url)
 parsed = data.json()
@@ -19,18 +19,13 @@ topic = 'quickstart-events'
 
 
 try:
-    while True:  # Producing 10 messages as an example
-
-        #message_value = input("Enter Message : ")
+    while True:
         producer.produce(topic, value=json.dumps(parsed).encode('utf-8'))
-        producer.flush()  # Ensure that the message is sent
-
-        #print(f'Sent message: {message_value}')
-        time.sleep(60)
+        producer.flush() 
+        time.sleep(300)
 
 except KeyboardInterrupt:
     pass
 
 finally:
-    producer.flush()  # Flush any remaining messages
-    #producer.close()
+    producer.flush() 
