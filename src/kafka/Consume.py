@@ -38,10 +38,19 @@ try:
                 break
 
         print(msg.value().decode('utf-8'))
+        
         decoded_data = msg.value().decode('utf-8')
-        sql = f'INSERT into LZ_API_DATA(api_data, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{datetime.datetime.now()}\')'
-        cur.execute(sql)
+        datadict = eval(decoded_data)
+
+        lzsql = f'INSERT into LZ_API_DATA(api_data, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{datetime.datetime.now()}\')'
+        cur.execute(lzsql)
+
+        main = datadict['main']
+
+        country = datadict['sys']
+
         conn.commit()
+        
 
 except KeyboardInterrupt:
     pass
