@@ -1,4 +1,16 @@
 from confluent_kafka import Consumer, KafkaError
+import urllib.parse as up
+import psycopg2
+import datetime
+
+up.uses_netloc.append("postgres")
+
+conn = psycopg2.connect(database="gdnjevix",
+                            user="gdnjevix",
+                            password="71O_c8x-OaR_yFJNiatPmqh3N0KjjZhm",
+                            host="floppy.db.elephantsql.com",
+                            port="5432")
+cur = conn.cursor()
 
 conf = {
     'bootstrap.servers': 'localhost:9092',
@@ -27,9 +39,22 @@ try:
 
         print(msg.value().decode('utf-8'))
         
+        decoded_data = msg.value().decode('utf-8')
+        datadict = eval(decoded_data)
+
+        lzsql = f'INSERT into LZ_API_DATA(api_data, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{datetime.datetime.now()}\')'
+        cur.execute(lzsql)
+
+        main = datadict['main']
+
+        country = datadict['sys']
+
+        conn.commit()
+        
 
 except KeyboardInterrupt:
     pass
 
 finally:
+    conn.close()
     consumer.close()
