@@ -3,6 +3,8 @@ import urllib.parse as up
 import psycopg2
 import datetime
 
+SOURCE = "www.opeanweather.com"
+
 up.uses_netloc.append("postgres")
 
 conn = psycopg2.connect(database="gdnjevix",
@@ -20,7 +22,6 @@ conf = {
 
 consumer = Consumer(conf)
 topic = 'quickstart-events'
-
 
 consumer.subscribe([topic])
 
@@ -42,15 +43,41 @@ try:
         decoded_data = msg.value().decode('utf-8')
         datadict = eval(decoded_data)
 
-        lzsql = f'INSERT into LZ_API_DATA(api_data, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{datetime.datetime.now()}\')'
+        execute_timestamp = datetime.datetime.now()
+
+        #Landing zone data
+        lzsql = f'INSERT into LZ_API_DATA(api_data, data_source, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{SOURCE}\',\'{execute_timestamp}\') RETURNING id'
         cur.execute(lzsql)
+        conn.commit() 
+        api_id = cur.fetchone()[0]
 
-        main = datadict['main']
+        #weather 
+        weather = datadict['weather'][0]
 
-        country = datadict['sys']
-
+        dim_weather_sql = f'CALL DIM_WEATHER_INSERT_V3(\'{datadict["id"]}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{api_id}\', \'{execute_timestamp}\' , null)'
+        cur.execute(dim_weather_sql)
         conn.commit()
+        weather_id = cur.fetchone()[0]
+
+        #location
+        sys = datadict['sys'] #dict
+        timezone = datadict['timezone']
+        id = datadict['id']
+        loc_name = datadict['name']
+        coord = datadict['coord'] #dict
+
+        dim_location_sql = f'CALL DIM_LOCATION_INSERT_V4(\'{sys["country"]}\',\'{int(timezone)}\', \'{int(id)}\', \'{loc_name}\', \'{coord["lon"]}\', \'{coord["lat"]}\', \'{api_id}\', \'{execute_timestamp}\')'
+        cur.execute(dim_location_sql)
+        conn.commit()
+        location_id = cur.fetchone()[0]
         
+        #fact main
+        main = datadict['main'] #dict
+        wind = datadict['wind'] #dict
+
+        fact_main_sql = f'CALL FACT_MAIN_INSERT(\'{location_id}\', \'{weather_id}\', \'{main["temp"]}\', \'{main["feels_like"]}\', \'{main["temp_min"]}\', \'{main["temp_max"]}\', \'{main["pressure"]}\', \'{main["humidity"]}\', \'{main["sea_level"]}\', \'{main["grnd_level"]}\', \'{wind["speed"]}\', \'{wind["deg"]}\', \'{wind["gust"]}\', \'{api_id}\', \'{execute_timestamp}\')'
+        cur.execute(fact_main_sql)
+        conn.commit()
 
 except KeyboardInterrupt:
     pass
