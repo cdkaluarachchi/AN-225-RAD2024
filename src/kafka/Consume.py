@@ -54,7 +54,7 @@ try:
         #weather 
         weather = datadict['weather'][0]
 
-        dim_weather_sql = f'CALL DIM_WEATHER_INSERT_V3(\'{datadict["id"]}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{api_id}\', \'{execute_timestamp}\' , null)'
+        dim_weather_sql = f'CALL DIM_WEATHER_INSERT_V3(\'{datadict["id"]}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{api_id}\', \'{execute_timestamp}\', null)'
         cur.execute(dim_weather_sql)
         conn.commit()
         weather_id = cur.fetchone()[0]
@@ -66,7 +66,7 @@ try:
         loc_name = datadict['name']
         coord = datadict['coord'] #dict
 
-        dim_location_sql = f'CALL DIM_LOCATION_INSERT_V4(\'{sys["country"]}\',\'{int(timezone)}\', \'{int(id)}\', \'{loc_name}\', \'{coord["lon"]}\', \'{coord["lat"]}\', \'{api_id}\', \'{execute_timestamp}\')'
+        dim_location_sql = f'CALL DIM_LOCATION_INSERT_V5(\'{sys["country"]}\',\'{int(timezone)}\', \'{int(id)}\', \'{loc_name}\', \'{coord["lon"]}\', \'{coord["lat"]}\', \'{api_id}\', \'{execute_timestamp}\', null)'
         cur.execute(dim_location_sql)
         conn.commit()
         location_id = cur.fetchone()[0]
@@ -75,7 +75,7 @@ try:
         main = datadict['main'] #dict
         wind = datadict['wind'] #dict
 
-        fact_main_sql = f'CALL FACT_MAIN_INSERT(\'{location_id}\', \'{weather_id}\', \'{main["temp"]}\', \'{main["feels_like"]}\', \'{main["temp_min"]}\', \'{main["temp_max"]}\', \'{main["pressure"]}\', \'{main["humidity"]}\', \'{main["sea_level"]}\', \'{main["grnd_level"]}\', \'{wind["speed"]}\', \'{wind["deg"]}\', \'{wind["gust"]}\', \'{api_id}\', \'{execute_timestamp}\')'
+        fact_main_sql = f'CALL FACT_MAIN_INSERT_V2(\'{location_id}\', \'{weather_id}\', \'{main["temp"]}\', \'{main["feels_like"]}\', \'{main["temp_min"]}\', \'{main["temp_max"]}\', \'{main["pressure"]}\', \'{main["humidity"]}\', \'{main["sea_level"]}\', \'{main["grnd_level"]}\', \'{wind["speed"]}\', \'{wind["deg"]}\', \'{wind["gust"]}\', \'{api_id}\', \'{execute_timestamp}\')'
         cur.execute(fact_main_sql)
         conn.commit()
 
