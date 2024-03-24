@@ -4,3 +4,7 @@ bin/kafka-server-start.sh config/server.properties
 
 bin/kafka-server-stop.sh
 bin/zookeeper-server-stop.shs
+
+
+list topics 
+./bin/kafka-topics.sh --bootstrap-server=localhost:9092 --list
