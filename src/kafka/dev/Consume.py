@@ -60,7 +60,7 @@ while True:
             #weather 
             weather = datadict['weather'][0]
 
-            dim_weather_sql = f'CALL SP_DIM_WEATHER_INSERT_V8(\'{datadict["id"]}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{api_id}\', \'{ist_execute_timestamp}\', null)'
+            dim_weather_sql = f'CALL SP_DIM_WEATHER_INSERT_V8(\'{weather["id"]}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{api_id}\', \'{ist_execute_timestamp}\', null)'
             cur.execute(dim_weather_sql)
             conn.commit()
             weather_id = cur.fetchone()[0]
@@ -90,5 +90,6 @@ while True:
         pass
         
     finally:
-        conn.close()
+        #conn.close()
         #consumer.close()
+        pass

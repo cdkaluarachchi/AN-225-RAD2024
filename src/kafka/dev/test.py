@@ -33,4 +33,4 @@ API_KEY = "5e68e78603755969e4dbb47f458154bf"
 execute_timestamp = datetime.datetime.now(pytz.utc)
 ist_timezone = pytz.timezone('Asia/Kolkata')
 ist_execute_timestamp = execute_timestamp.astimezone(ist_timezone)
-print(ist_execute_timestamp[:-13])
+print(ist_execute_timestamp)
