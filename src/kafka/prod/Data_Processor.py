@@ -36,14 +36,12 @@ conf = {
 producer = Producer(conf)
 
 # Request data from API for each location and send to kafka
-
 execute_timestamp = datetime.datetime.now(pytz.utc)
 ist_timezone = pytz.timezone('Asia/Kolkata')
 pone_ist_execute_timestamp = execute_timestamp.astimezone(ist_timezone)
 
 try:
     for location in data:
-        
         wdata = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={data[location][0]}&lon={data[location][1]}&appid={API_KEY}").json()
         producer.produce(TOPIC, value=json.dumps(wdata).encode('utf-8'))
         producer.flush()
@@ -97,22 +95,18 @@ try:
 
         decoded_data = msg.value().decode('utf-8')
         datadict = eval(decoded_data)
-        
         ptwo_ist_execute_timestamp = execute_timestamp.astimezone(ist_timezone)
 
         #Landing zone data
-        lzsql = f'INSERT into LZ_API_DATA(api_data, data_source, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{SOURCE}\',\'{ptwo_ist_execute_timestamp}\') RETURNING id'
-        cur.execute(lzsql)
+        cur.execute(f'INSERT into LZ_API_DATA(api_data, data_source, sys_insert_datetime) VALUES(\'{decoded_data}\', \'{SOURCE}\',\'{ptwo_ist_execute_timestamp}\') RETURNING id')
         conn.commit() 
         api_id = cur.fetchone()[0]
 
         #weather 
         weather = datadict['weather'][0]
 
-        dim_weather_sql = f'CALL SP_DIM_WEATHER_INSERT_V11(\'{weather["id"]}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{api_id}\', \'{ptwo_ist_execute_timestamp}\', null)'
-        cur.execute(dim_weather_sql)
+        cur.execute(f'CALL SP_DIM_WEATHER_INSERT_V15(\'{int(weather["id"])}\', \'{weather["main"]}\', \'{weather["description"]}\', \'{weather["icon"]}\', \'{int(api_id)}\', \'{ptwo_ist_execute_timestamp}\')')
         conn.commit()
-        weather_id = cur.fetchone()[0]
 
         #location
         sys = datadict['sys'] #dict
@@ -121,17 +115,14 @@ try:
         loc_name = datadict['name']
         coord = datadict['coord'] #dict
 
-        dim_location_sql = f'CALL SP_DIM_LOCATION_INSERT_V2(\'{sys["country"]}\',\'{int(timezone)}\', \'{int(id)}\', \'{loc_name}\', \'{coord["lon"]}\', \'{coord["lat"]}\', \'{api_id}\', \'{ptwo_ist_execute_timestamp}\', null)'
-        cur.execute(dim_location_sql)
+        cur.execute(f'CALL SP_DIM_LOCATION_INSERT_V17(\'{sys["country"]}\',\'{int(timezone)}\', \'{int(id)}\', \'{loc_name}\', \'{coord["lon"]}\', \'{coord["lat"]}\', \'{api_id}\', \'{ptwo_ist_execute_timestamp}\')')
         conn.commit()
-        location_id = cur.fetchone()[0]
 
         #fact main
         main = datadict['main'] #dict
         wind = datadict['wind'] #dict
 
-        fact_main_sql = f'CALL FACT_MAIN_INSERT_V2(\'{location_id}\', \'{weather_id}\', \'{main["temp"]}\', \'{main["feels_like"]}\', \'{main["temp_min"]}\', \'{main["temp_max"]}\', \'{main["pressure"]}\', \'{main["humidity"]}\', \'{main["sea_level"]}\', \'{main["grnd_level"]}\', \'{wind["speed"]}\', \'{wind["deg"]}\', \'{wind["gust"]}\', \'{api_id}\', \'{ptwo_ist_execute_timestamp}\')'
-        cur.execute(fact_main_sql)
+        cur.execute(f'CALL FACT_MAIN_INSERT_V2(\'{id}\', \'{weather["id"]}\', \'{main["temp"]}\', \'{main["feels_like"]}\', \'{main["temp_min"]}\', \'{main["temp_max"]}\', \'{main["pressure"]}\', \'{main["humidity"]}\', \'{main["sea_level"]}\', \'{main["grnd_level"]}\', \'{wind["speed"]}\', \'{wind["deg"]}\', \'{wind["gust"]}\', \'{api_id}\', \'{ptwo_ist_execute_timestamp}\')')
         conn.commit()
 
         print(f'Inserted Record to DB {execute_timestamp}')
@@ -142,5 +133,4 @@ except Exception as e:
     print(f"Error in Phase 2 {e}")
 
 finally:
-    
     print(f"Phase 2 Complete {ptwo_ist_execute_timestamp}")
