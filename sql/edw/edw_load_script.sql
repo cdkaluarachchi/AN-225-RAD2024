@@ -46,48 +46,40 @@ END
 $$;
 
 
-CREATE PROCEDURE SP_DIM_WEATHER_INSERT_V9 (
+CREATE PROCEDURE SP_DIM_WEATHER_INSERT (
     _ID NUMERIC,
     _MAIN VARCHAR(20),
     _DESCR VARCHAR(60),
     _ICON VARCHAR(10),
     _API_ID NUMERIC,
-    _SYS_INSERT_DATETIME TIMESTAMP,
-    INOUT W_ID BIGINT
+    _SYS_INSERT_DATETIME TIMESTAMP
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    IF EXISTS (
-        SELECT 1
-        FROM DIM_WEATHER T
-        WHERE T.MAIN = _MAIN
-        AND T.DESCR = _DESCR
-        AND T.ICON = _ICON
-    )
-    THEN
-        DELETE FROM DIM_WEATHER WHERE MAIN = _MAIN AND DESCR = _DESCR AND ICON = _ICON;
-    END IF;
-
-    INSERT INTO DIM_WEATHER (
+	INSERT INTO DIM_WEATHER (
         ID,
         MAIN,
         DESCR,
         ICON,
         API_ID,
         SYS_INSERT_DATETIME
-    )
-    VALUES (
-        _ID,
+)
+SELECT  _ID,
         _MAIN,
         _DESCR,
         _ICON,
         _API_ID,
         _SYS_INSERT_DATETIME
-    )
-    RETURNING ID INTO W_ID;
-END;
-$$;
+WHERE NOT EXISTS (
+        SELECT 1
+        FROM DIM_WEATHER
+        WHERE MAIN = _MAIN
+        AND DESCR = _DESCR
+        AND ICON = _ICON
+    );
+ END
+ $$;
 
 
 
